@@ -49,7 +49,7 @@ Thumbs.db
 # ========== Архивы датасетов ==========
 ProjectSegmentation/buffer/           # Буферизованные изображения
 ProjectSegmentation/Anon_Liver/       # Датасет пациентов (целевой)
-ProjectSegmentation/Archiv/           # Датасет CHAOS
+ProjectSegmentation/Archive/           # Датасет CHAOS
 *.pkl
 *.pickle
 
