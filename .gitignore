@@ -1,0 +1,57 @@
+# ========== Python ==========
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ========== Виртуальное окружение ==========
+venv/
+.env/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ========== IDE ==========
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ========== Системные файлы ==========
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ========== Архивы датасетов ==========
+ProjectSegmentation/buffer/           # Буферизованные изображения
+ProjectSegmentation/Anon_Liver/       # Датасет пациентов (целевой)
+ProjectSegmentation/Archiv/           # Датасет CHAOS
+*.pkl
+*.pickle
+
+# ========== Логи ==========
+*.log
