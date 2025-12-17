@@ -4,20 +4,21 @@ import pandas as pd
 from medpy.metric import dc, jc
 from medpy.io import load
 from sklearn.model_selection import train_test_split as tts
-from keras.models import load_model
+from tensorflow.python.keras.models import load_model
 from tqdm import tqdm
-from keras import backend as K
-from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.preprocessing.image import ImageDataGenerator
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+
 
 SEED = 42
 
 # Подготовка данных ==========================================================
 
 def path(fname, num):
-    return f'Archiv/CHAOS_Train_Sets/Train_Sets/CT/' + fname
+    return f'../Archive/CHAOS_Train_Sets/Train_Sets/CT/' + fname
 
 def get_data(num):
     X_path = path('', num)
@@ -39,8 +40,6 @@ X_filenames = X_filenames1
 y_filenames = y_filenames1
 
 len(X_filenames), len(y_filenames)
-print(X_filenames)
-print(y_filenames)
 
 # Буферизация изображений =====================================================================
 
@@ -51,7 +50,8 @@ def buffer_imgs(filenames, is_dicom, folder='buffer'):
     for filename in tqdm(filenames, position=0):
         img, header = load(filename)
         pil = Image.fromarray(img.squeeze())
-        fname = folder + '/' + filename.replace('/', '-')
+        # fname = folder + '/' + filename.replace('/', '-')
+        fname = folder + '/' + filename.replace('\\', '-').replace('/', '-').replace(':', '-').lstrip('-')
         if is_dicom:
             fname = fname+'.tiff'
             pil.save(fname, 'TIFF', compression='none')
@@ -67,7 +67,6 @@ y = buffer_imgs(y_filenames, False)
 
 X.shape, y.shape
 
-
 def show_img(n):
     plt.figure(figsize=(5,5))
     plt.imshow(Image.open(X[0][n]))
@@ -79,10 +78,7 @@ for i in np.random.choice(np.arange(y.shape[0]), 10):
 
 X_train, X_test, y_train, y_test = tts(X, y, test_size=0.3, shuffle=True, random_state=SEED)
 
-# Определение метрик модели UNet =============================================================
-
-K.set_image_data_format('channels_first')
-
+# Метрики модели UNet =============================================================
 
 def dice_coef(y_true, y_pred):
     smooth = 1e-20
@@ -103,23 +99,17 @@ def jaccard_coef(y_true, y_pred):
 def jaccard_coef_loss(y_true, y_pred):
     return 1 - jaccard_coef(y_true, y_pred)
 
-def plot_history(history, scoring='dice_coef'):
-    dct = history.history
-    fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-    ax[0].plot(dct['loss'], label='loss')
-    ax[0].plot(dct['val_loss'], label='val_loss')
-    ax[1].plot(dct[scoring], label=scoring)
-    ax[1].plot(dct[f'val_{scoring}'], label=f'val_{scoring}')
-    if 'lr' in dct:
-        ax[2].plot(dct['lr'], label='lr')
-    [a.legend() for a in ax]
-
 # Подготовка генераторов данных ================================================
 
 X_train.shape, y_train.shape
 w_size = np.array(Image.open(X[0][0])).shape[0]
 
-model_1 = load_model('unet_r.h5') #custom_objects={'dice_coef_loss': dice_coef_loss, 'dice_coef': dice_coef}
+model_1 = load_model('fix_unet.h5', custom_objects={
+    'dice_coef': dice_coef,
+    'dice_coef_loss': dice_coef_loss,
+    'jaccard_coef': jaccard_coef,
+    'jaccard_coef_loss': jaccard_coef_loss
+})
 
 X_tr, X_val, y_tr, y_val = tts(X_train, y_train, test_size=0.1, shuffle=True, random_state=SEED)
 
@@ -161,7 +151,6 @@ idg_test_mask = ImageDataGenerator(rescale=1./255)
 data_test_generator = idg_test_data.flow_from_dataframe(X_val,**val_gen_params)
 mask_test_generator = idg_test_mask.flow_from_dataframe(y_val, **val_gen_params)
 test_generator = zip(data_test_generator, (x.astype(np.uint8) for x in mask_test_generator))
-
 
 # Предсказания модели (поиск контуров) ============================================================
 
@@ -222,5 +211,6 @@ def evaluate(x_names, y_names, set_name='evaluating', plot_pairs=0):
 
     return mean_dice, mean_jccr
 
+evaluate(X_tr, y_tr, 'TR SET', 10)
 
-evaluate(X_test, y_test, 'TEST SET', plot_pairs=10)
+
